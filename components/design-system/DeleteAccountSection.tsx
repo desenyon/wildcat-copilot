@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, ConfirmDialog, Panel } from "@/components/design-system";
 import { deleteOwnAccountAction } from "@/lib/auth/actions";
 
 export function DeleteAccountSection() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <Panel className="border-danger/40">
@@ -25,7 +27,7 @@ export function DeleteAccountSection() {
         confirmLabel="Delete account"
         destructive
         onConfirm={() => {
-          void deleteOwnAccountAction();
+          void deleteOwnAccountAction().then(() => router.push("/"));
         }}
       />
     </Panel>

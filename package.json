@@ -20,6 +20,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.5.19",
     "@radix-ui/react-dialog": "^1.1.19",
     "@radix-ui/react-tabs": "^1.1.17",
     "class-variance-authority": "^0.7.1",
@@ -27,7 +28,6 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.10",
-    "next-auth": "^5.0.0-beta.31",
     "pg-boss": "^12.26.0",
     "postgres": "^3.4.9",
     "react": "19.2.4",
@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@clerk/testing": "^2.2.9",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

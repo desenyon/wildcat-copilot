@@ -18,7 +18,7 @@ interface CourseOwnership {
 /**
  * Pure authorization check, no DB/session access, so it's cheap to unit test
  * directly (see tests/integration/authorization.test.ts) without pulling in
- * the NextAuth runtime. Course "ownership" for P-1 is single-teacher;
+ * the Clerk runtime. Course "ownership" for P-1 is single-teacher;
  * department-level sharing (multiple owners in an org) is a P-5/M5.2
  * concern, not P-1.
  */

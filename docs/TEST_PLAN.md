@@ -10,9 +10,14 @@
 
 - `tests/unit/example.test.tsx` — proves the Vitest + Testing Library + fixture pipeline works.
 - `tests/integration/schema.test.ts` — runs against a real local Postgres, verifies cascading deletion (course → artifacts) and the generation-request idempotency-key uniqueness constraint.
-- `tests/e2e/homepage.spec.ts`, `design-system.spec.ts`, `workspace-shell.spec.ts` — boot the real app, exercise navigation/dialogs/the course switcher, and run an axe scan with zero critical violations on each page.
+- `tests/e2e/homepage.spec.ts`, `design-system.spec.ts` — boot the real app and run an axe scan with zero critical violations.
+- `tests/e2e/auth.spec.ts` — unauthenticated visitors are redirected to sign-in.
 
 These are real coverage of what exists so far, not placeholders — extend them as each task adds behavior, don't leave gaps.
+
+## Known gap: authenticated e2e coverage
+
+`tests/e2e/workspace-shell.spec.ts` and `tests/e2e/storage.spec.ts` are currently `test.skip()`-ed. They need a signed-in Clerk session, but this Clerk instance is configured OAuth-only (Google/GitHub/LinkedIn) with no email/password/username identification enabled, so `@clerk/testing`'s headless Playwright sign-in helper (`clerk.signIn({ page, emailAddress })`) can't mint a test session. See `docs/DECISIONS.md` (2026-07-15, "Switch from Auth.js to Clerk") for how to re-enable: add an email-based identification strategy for testing in the Clerk dashboard, then restore `tests/e2e/global-setup.ts`'s test-user provisioning and `tests/e2e/helpers/auth.ts`'s `signInAsTestTeacher` implementation. Verify these flows manually in a browser until then.
 
 ## Running integration tests locally
 

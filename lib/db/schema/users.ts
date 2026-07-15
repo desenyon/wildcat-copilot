@@ -14,10 +14,13 @@ export const users = pgTable("users", {
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
+  // Clerk is the identity provider; this is Clerk's `user_...` id, the join
+  // key between a Clerk session and our own User row.
+  clerkUserId: text("clerk_user_id").notNull().unique(),
   email: text("email").notNull().unique(),
   displayName: text("display_name").notNull(),
   role: userRoleEnum("role").notNull().default("teacher"),
-  authProvider: text("auth_provider").notNull().default("google"),
+  authProvider: text("auth_provider").notNull().default("clerk"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
 });

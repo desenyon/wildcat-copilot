@@ -25,9 +25,10 @@ jobs:
     env:
       DATABASE_URL: postgres://wildcat:wildcat_dev_only@localhost:5432/wildcat_copilot
       TEST_DATABASE_URL: postgres://wildcat:wildcat_dev_only@localhost:5432/wildcat_copilot
-      GOOGLE_OAUTH_CLIENT_ID: ci-placeholder
-      GOOGLE_OAUTH_CLIENT_SECRET: ci-placeholder
-      AUTH_SECRET: ci-placeholder-secret-value-that-is-long-enough
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dW5pZmllZC1taW5ub3ctOC5jbGVyay5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      APP_SECRET: ci-placeholder-secret-value-that-is-long-enough
       OBJECT_STORAGE_BUCKET: ci-placeholder
       OBJECT_STORAGE_REGION: us-east-1
       OBJECT_STORAGE_ACCESS_KEY_ID: ci-placeholder
@@ -67,9 +68,10 @@ jobs:
     needs: build-and-test
     env:
       DATABASE_URL: postgres://user:password@localhost:5432/wildcat_copilot
-      GOOGLE_OAUTH_CLIENT_ID: ci-placeholder
-      GOOGLE_OAUTH_CLIENT_SECRET: ci-placeholder
-      AUTH_SECRET: ci-placeholder-secret-value-that-is-long-enough
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dW5pZmllZC1taW5ub3ctOC5jbGVyay5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      APP_SECRET: ci-placeholder-secret-value-that-is-long-enough
       OBJECT_STORAGE_BUCKET: ci-placeholder
       OBJECT_STORAGE_REGION: us-east-1
       OBJECT_STORAGE_ACCESS_KEY_ID: ci-placeholder

@@ -25,6 +25,7 @@ describe("course authorization", () => {
         .insert(users)
         .values({
           organizationId: orgA.id,
+          clerkUserId: `user_test_a_${Date.now()}`,
           email: `teacher-a-${Date.now()}@example.com`,
           displayName: "Teacher A",
         })
@@ -33,6 +34,7 @@ describe("course authorization", () => {
         .insert(users)
         .values({
           organizationId: orgA.id,
+          clerkUserId: `user_test_a2_${Date.now()}`,
           email: `teacher-a2-${Date.now()}@example.com`,
           displayName: "Teacher A2",
         })
@@ -41,6 +43,7 @@ describe("course authorization", () => {
         .insert(users)
         .values({
           organizationId: orgB.id,
+          clerkUserId: `user_test_b_${Date.now()}`,
           email: `teacher-b-${Date.now()}@example.com`,
           displayName: "Teacher B",
         })

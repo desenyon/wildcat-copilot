@@ -15,6 +15,7 @@ describe("database schema", () => {
         .insert(users)
         .values({
           organizationId: org.id,
+          clerkUserId: `user_test_${Date.now()}`,
           email: `teacher-${Date.now()}@example.com`,
           displayName: "Test Teacher",
         })
@@ -69,6 +70,7 @@ describe("database schema", () => {
         .insert(users)
         .values({
           organizationId: org.id,
+          clerkUserId: `user_test_${Date.now()}`,
           email: `teacher-${Date.now()}@example.com`,
           displayName: "Test Teacher",
         })

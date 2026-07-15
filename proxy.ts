@@ -1,24 +1,22 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const PROTECTED_PREFIXES = ["/home", "/documents", "/packs", "/artifacts", "/settings"];
+const isProtectedRoute = createRouteMatcher([
+  "/home(.*)",
+  "/documents(.*)",
+  "/packs(.*)",
+  "/artifacts(.*)",
+  "/settings(.*)",
+]);
 
-export default auth((req) => {
-  const isProtected = PROTECTED_PREFIXES.some((prefix) => req.nextUrl.pathname.startsWith(prefix));
-  if (isProtected && !req.auth) {
-    const signInUrl = new URL("/sign-in", req.nextUrl.origin);
-    signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return NextResponse.redirect(signInUrl);
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
   }
-  return NextResponse.next();
 });
 
 export const config = {
   matcher: [
-    "/home/:path*",
-    "/documents/:path*",
-    "/packs/:path*",
-    "/artifacts/:path*",
-    "/settings/:path*",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
   ],
 };

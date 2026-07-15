@@ -7,7 +7,7 @@ Private, course-aware teacher operations workspace. Working product name; see `A
 - Next.js (App Router) + TypeScript (strict)
 - Tailwind CSS v4
 - PostgreSQL + Drizzle ORM (`postgres` driver) + pgvector
-- Auth.js v5 (Google OAuth, JWT sessions, pilot allowlist)
+- Clerk (identity/sessions) + our own `users`/`organizations` tables for authorization, pilot allowlist
 - pg-boss for background jobs (document processing / generation / export queues)
 - Local filesystem object storage adapter behind a provider-agnostic interface
 - Zod for env and request/response validation

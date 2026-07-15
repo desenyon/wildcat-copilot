@@ -12,7 +12,7 @@ export interface TokenPayload {
 }
 
 function sign(data: string): string {
-  return createHmac("sha256", getEnv().AUTH_SECRET).update(data).digest("base64url");
+  return createHmac("sha256", getEnv().APP_SECRET).update(data).digest("base64url");
 }
 
 export function issueToken(

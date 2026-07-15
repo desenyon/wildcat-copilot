@@ -1,12 +1,14 @@
 "use client";
 
+import { SignOutButton as ClerkSignOutButton } from "@clerk/nextjs";
 import { Button } from "@/components/design-system/Button";
-import { signOutAction } from "@/lib/auth/actions";
 
 export function SignOutButton() {
   return (
-    <Button variant="ghost" size="sm" onClick={() => signOutAction()}>
-      Sign out
-    </Button>
+    <ClerkSignOutButton redirectUrl="/">
+      <Button variant="ghost" size="sm">
+        Sign out
+      </Button>
+    </ClerkSignOutButton>
   );
 }

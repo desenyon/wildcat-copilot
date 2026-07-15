@@ -3,9 +3,11 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().url(),
-  GOOGLE_OAUTH_CLIENT_ID: z.string().min(1),
-  GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
-  AUTH_SECRET: z.string().min(32),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+  CLERK_SECRET_KEY: z.string().min(1),
+  // General-purpose HMAC signing secret (currently: short-lived storage upload/
+  // download tokens). Not tied to any specific auth provider.
+  APP_SECRET: z.string().min(32),
   PILOT_ALLOWLIST: z
     .string()
     .default("")

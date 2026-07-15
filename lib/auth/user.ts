@@ -3,7 +3,11 @@ import { getDb } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getOrCreateOrganizationForEmail } from "./organization";
 
-export async function upsertUserOnSignIn(params: { email: string; displayName: string }) {
+export async function upsertUserOnSignIn(params: {
+  clerkUserId: string;
+  email: string;
+  displayName: string;
+}) {
   const db = getDb();
   const email = params.email.toLowerCase();
   const organization = await getOrCreateOrganizationForEmail(email);
@@ -12,20 +16,21 @@ export async function upsertUserOnSignIn(params: { email: string; displayName: s
     .insert(users)
     .values({
       organizationId: organization.id,
+      clerkUserId: params.clerkUserId,
       email,
       displayName: params.displayName,
-      authProvider: "google",
+      authProvider: "clerk",
     })
     .onConflictDoUpdate({
-      target: users.email,
-      set: { displayName: params.displayName, lastActiveAt: sql`now()` },
+      target: users.clerkUserId,
+      set: { email, displayName: params.displayName, lastActiveAt: sql`now()` },
     })
     .returning();
 
   return user;
 }
 
-export async function getUserByEmail(email: string) {
+export async function getUserByClerkId(clerkUserId: string) {
   const db = getDb();
-  return db.query.users.findFirst({ where: eq(users.email, email.toLowerCase()) });
+  return db.query.users.findFirst({ where: eq(users.clerkUserId, clerkUserId) });
 }
