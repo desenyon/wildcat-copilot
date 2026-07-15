@@ -1,21 +1,31 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { NavRail } from "@/components/design-system/NavRail";
 import { TopContextBar } from "@/components/design-system/TopContextBar";
 import { EvidencePanel } from "@/components/sources/SourceTracePanel";
-import { CourseSwitcher } from "@/components/courses/CourseSwitcher";
+import { CourseSwitcher, type CourseSwitcherOption } from "@/components/courses/CourseSwitcher";
 import { Button } from "@/components/design-system/Button";
 
-const placeholderCourses = [
-  { id: "course-1", name: "Introduction to Biology" },
-  { id: "course-2", name: "AP English Language" },
-];
+export interface WorkspaceShellProps {
+  children: ReactNode;
+  courses: CourseSwitcherOption[];
+}
 
-export function WorkspaceShell({ children }: { children: ReactNode }) {
+export function WorkspaceShell({ children, courses }: WorkspaceShellProps) {
   const [navOpen, setNavOpen] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
-  const [activeCourseId, setActiveCourseId] = useState(placeholderCourses[0].id);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const activeCourseId = searchParams.get("course") ?? courses[0]?.id ?? "";
+
+  function selectCourse(courseId: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("course", courseId);
+    router.push(`?${params.toString()}`);
+  }
 
   return (
     <div className="flex h-dvh flex-col">
@@ -37,11 +47,22 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <TopContextBar
             courseSwitcher={
-              <CourseSwitcher
-                courses={placeholderCourses}
-                activeCourseId={activeCourseId}
-                onSelect={setActiveCourseId}
-              />
+              courses.length > 0 ? (
+                <CourseSwitcher
+                  courses={courses}
+                  activeCourseId={activeCourseId}
+                  onSelect={selectCourse}
+                />
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => router.push("/courses/new")}
+                >
+                  Create a course
+                </Button>
+              )
             }
             saveState="saved"
             actions={

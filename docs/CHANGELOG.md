@@ -2,6 +2,15 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-15 — P-1 → M1.1 → T1.1.2: Course creation
+
+- Real course creation: `/courses/new` form (Zod-validated server action) inserts an actual `courses` row owned by the signed-in teacher and redirects to `/home?course=<id>`.
+- `WorkspaceShell` now runs on real data — the `(workspace)` layout fetches the teacher's courses server-side and passes them down, replacing the hardcoded placeholder list. The course switcher drives a `?course=` query param via client-side navigation.
+- `/home` redirects a teacher with zero courses straight to `/courses/new`.
+- Verified end-to-end in a real browser with a real Google sign-in through Clerk (not a test double): created two courses, confirmed both appear in the switcher with the right one selected after each creation.
+- Found and fixed a real bug while doing that manual verification: creating a course succeeded, but the switcher kept showing "Create a course" instead of the new course — Next.js's client router cache was serving a stale layout render across the `/courses/new` → `/home` redirect. Fixed with `revalidatePath("/", "layout")` in the server action before redirecting.
+- Repo is now pushed to GitHub (`desenyon/wildcat-copilot`, public) with CI passing; `CLERK_SECRET_KEY` is set via `gh secret set` rather than committed.
+
 ## 2026-07-15 — Switch identity provider to Clerk
 
 - Replaced Auth.js v5 with Clerk (`@clerk/nextjs`) at the user's request, using real Clerk dev-instance keys. Root `/` now redirects to `/home`, which the auth proxy correctly bounces unauthenticated visitors to `/sign-in` (fixed the leftover `create-next-app` boilerplate that was showing on first run).
