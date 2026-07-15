@@ -9,9 +9,14 @@
 ## Current coverage
 
 - `tests/unit/example.test.tsx` — proves the Vitest + Testing Library + fixture pipeline works.
-- `tests/e2e/homepage.spec.ts` — proves Playwright boots the app and runs an axe scan with zero critical violations.
+- `tests/integration/schema.test.ts` — runs against a real local Postgres, verifies cascading deletion (course → artifacts) and the generation-request idempotency-key uniqueness constraint.
+- `tests/e2e/homepage.spec.ts`, `design-system.spec.ts`, `workspace-shell.spec.ts` — boot the real app, exercise navigation/dialogs/the course switcher, and run an axe scan with zero critical violations on each page.
 
-Both are scaffolding placeholders and should be replaced/extended as real features land in each task, not left as the only coverage.
+These are real coverage of what exists so far, not placeholders — extend them as each task adds behavior, don't leave gaps.
+
+## Running integration tests locally
+
+Integration tests need a running Postgres: `docker compose up -d && npm run db:migrate`, then `npm test` (or set `TEST_DATABASE_URL` to point elsewhere). CI provisions a `pgvector/pgvector:pg16` service container automatically.
 
 ## Required end-to-end journeys (T1.10.1)
 
@@ -23,7 +28,7 @@ No real student, teacher, or school data in any fixture, test, screenshot, or lo
 
 ## Database test isolation
 
-Not yet applicable (no schema exists — T0.4.3). Plan: each integration test run gets a dedicated Postgres schema or transactional rollback per test, provisioned via a test-only Drizzle client; no test may run against a database containing real data.
+Each integration test runs inside a Postgres transaction that is always rolled back (`tests/integration/db-helpers.ts`), against the already-migrated `public` schema of a local/CI Postgres instance. (A per-test-schema approach was tried first but doesn't work here: `drizzle-kit generate` emits `public`-qualified `CREATE TYPE` statements for enums, so re-running migrations into a fresh schema per test collides on those types. Transaction rollback avoids the problem entirely and is the standard pattern.) No test may run against a database containing real data.
 
 ## CI gates
 

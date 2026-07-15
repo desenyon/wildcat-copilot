@@ -45,7 +45,14 @@ tests/
 
 ## 3. Core domain entities
 
-Defined in AGENTS.md §4.3. Implemented as Drizzle schema under `lib/db/schema/` (one file per entity group), starting in **T0.4.3**. Not yet implemented as of this document's last update — see `docs/PROGRESS.md`.
+Defined in AGENTS.md §4.3, implemented as Drizzle schema under `lib/db/schema/` (one file per entity group). Migrations in `lib/db/migrations/`; local dev DB via `docker-compose.yml` (Postgres 16 + pgvector). See `docs/PROGRESS.md` for status.
+
+## 3a. Auth, authorization, storage, jobs
+
+- **Auth**: `lib/auth/` — Auth.js v5, Google OAuth, JWT sessions carrying `userId`/`organizationId`/`role`. No Auth.js DB adapter (see `docs/DECISIONS.md`); sign-in upserts directly into our own `users`/`organizations` tables.
+- **Authorization**: `lib/auth/authorization.ts` (`requireActor`, `requireCourseAccess`) plus a pure, DB-free `checkCourseAccess` in `lib/auth/course-access.ts`. Every server mutation/query touching course data must go through this.
+- **Object storage**: `lib/documents/storage/` defines a provider-agnostic `StorageProvider` interface; `local.ts` is the filesystem-backed implementation used until a cloud vendor is chosen. "Signed URLs" are `/api/storage/upload` and `/api/storage/download`, gated by a short-lived HMAC token.
+- **Background jobs**: `lib/jobs/` (pg-boss client, queue config, publish/status helpers) and `workers/*/index.ts` (per-queue handlers, currently stubs pending M1.2/M1.3/M1.8 logic). Run via `npm run workers`.
 
 ## 4. AI pipeline (target shape, M1.3+)
 

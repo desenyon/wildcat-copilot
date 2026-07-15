@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { signInAsTestTeacher } from "./helpers/auth";
+
+test.beforeEach(async ({ page }) => {
+  await signInAsTestTeacher(page);
+});
 
 test("workspace shell navigation works without full page reloads", async ({ page }) => {
   await page.goto("/home");

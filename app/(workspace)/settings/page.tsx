@@ -1,4 +1,5 @@
 import { EditorialHeader } from "@/components/design-system";
+import { DeleteAccountSection } from "@/components/design-system/DeleteAccountSection";
 
 export default function SettingsPage() {
   return (
@@ -8,6 +9,9 @@ export default function SettingsPage() {
         title="Settings"
         description="Course metadata, teacher preferences, data usage, and deletion controls."
       />
+      <div className="mt-8 max-w-lg">
+        <DeleteAccountSection />
+      </div>
     </div>
   );
 }

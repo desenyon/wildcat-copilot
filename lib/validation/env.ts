@@ -6,6 +6,15 @@ const envSchema = z.object({
   GOOGLE_OAUTH_CLIENT_ID: z.string().min(1),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
   AUTH_SECRET: z.string().min(32),
+  PILOT_ALLOWLIST: z
+    .string()
+    .default("")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
   OBJECT_STORAGE_BUCKET: z.string().min(1),
   OBJECT_STORAGE_REGION: z.string().min(1),
   OBJECT_STORAGE_ACCESS_KEY_ID: z.string().min(1),

@@ -2,6 +2,15 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-15 — P-0 → M0.4 → T0.4.1–T0.4.5
+
+- Database schema (AGENTS.md §4.3): all 14 entities in `lib/db/schema/`, Drizzle + `postgres` driver, migrations against local Postgres 16 + pgvector (`docker-compose.yml`), cascading deletes, generation-request idempotency-key uniqueness. Integration tests run against real Postgres with transaction-rollback isolation.
+- Authentication: Auth.js v5, Google OAuth, JWT sessions, `PILOT_ALLOWLIST`-gated pilot access, lazy per-email-domain organization creation, user upsert on sign-in, sign-out and hard account deletion entry points. Route protection via `proxy.ts` (renamed from `middleware.ts` per Next 16 convention).
+- Authorization: `lib/auth/authorization.ts` enforces org/course-scoped access server-side; pure `checkCourseAccess` logic is unit-testable without the NextAuth runtime. Verified: owner allowed, cross-org denied, cross-owner-same-org denied.
+- Object storage: provider-agnostic `StorageProvider` interface with a local filesystem implementation; HMAC-signed, 5-minute "signed URLs" via `/api/storage/upload` and `/api/storage/download`. Verified end-to-end: byte-exact upload/download round trip, unsupported MIME type rejected, expired token rejected.
+- Background jobs: pg-boss on the same Postgres instance, queues for document-processing/generation/export with bounded retries + backoff + dead-letter queues, `singletonKey`-based idempotency. `npm run workers` entrypoint. Verified against real Postgres: job reaches `completed` state, duplicate idempotency key is a no-op.
+- CI now provisions a `pgvector/pgvector:pg16` service container and runs migrations before tests.
+
 ## 2026-07-15 — P-0 → M0.3 → T0.3.1, T0.3.2, T0.3.3
 
 - Design tokens (AGENTS.md §3.3–3.4): semantic color/spacing/typography/motion tokens via Tailwind v4 `@theme` in `app/globals.css`. All foreground/background color pairs contrast-checked ≥4.5:1. Light/dark supported via `prefers-color-scheme` and a `data-theme` override.

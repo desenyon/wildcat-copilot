@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { SignOutButton } from "@/components/design-system/SignOutButton";
 
 export interface NavItem {
   href: string;
@@ -46,6 +47,9 @@ export function NavRail({ className }: { className?: string }) {
           </Link>
         );
       })}
+      <div className="mt-auto pt-4">
+        <SignOutButton />
+      </div>
     </nav>
   );
 }

@@ -22,15 +22,18 @@ Authoritative source: AGENTS.md §4.7 and §0.7. This document restates the base
 
 ## Implementation status
 
-| Control                                              | Status                                  | Where                   |
-| ---------------------------------------------------- | --------------------------------------- | ----------------------- |
-| Env validation prevents startup with missing secrets | Done                                    | `lib/validation/env.ts` |
-| Upload confirmation ("no identifiable student data") | Not started                             | T1.2.1                  |
-| No raw uploaded text in logs                         | Not started (no logging pipeline yet)   | T7.1.1                  |
-| No raw uploaded text in analytics                    | Not started (no analytics pipeline yet) | T1.9.1                  |
-| Signed upload/download URLs                          | Not started                             | T0.4.4                  |
-| File/course deletion                                 | Not started                             | T1.1.4, T0.4.3          |
-| Encryption in transit/at rest                        | Deferred to hosting/DB provider config  | T0.4.3, T0.4.4          |
+| Control                                                | Status                                                              | Where                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------ |
+| Env validation prevents startup with missing secrets   | Done                                                                | `lib/validation/env.ts`                          |
+| Google OAuth restricted to an explicit pilot allowlist | Done                                                                | `lib/auth/config.ts` (`PILOT_ALLOWLIST`)         |
+| Server-side cross-course/cross-org access prevention   | Done                                                                | `lib/auth/authorization.ts`                      |
+| Account deletion entry point (hard delete, cascades)   | Done                                                                | `lib/auth/actions.ts` (`deleteOwnAccountAction`) |
+| Upload confirmation ("no identifiable student data")   | Not started                                                         | T1.2.1                                           |
+| No raw uploaded text in logs                           | Not started (no logging pipeline yet)                               | T7.1.1                                           |
+| No raw uploaded text in analytics                      | Not started (no analytics pipeline yet)                             | T1.9.1                                           |
+| Signed, short-lived upload/download URLs               | Done (5 min expiry, HMAC-signed, local filesystem backend)          | `lib/documents/storage/`, `app/api/storage/*`    |
+| File/course deletion                                   | Account deletion done; per-document/per-course deletion not started | T1.1.4, T1.2.5                                   |
+| Encryption in transit/at rest                          | Deferred to hosting/DB provider config                              | T0.4.3, T0.4.4                                   |
 
 ## Fixtures and test data
 
