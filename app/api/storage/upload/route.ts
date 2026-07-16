@@ -1,7 +1,11 @@
+import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { requireActor } from "@/lib/auth/authorization";
+import { getDb } from "@/lib/db/client";
+import { courseDocuments } from "@/lib/db/schema";
 import { LocalStorageProvider } from "@/lib/documents/storage/local";
 import { verifyToken } from "@/lib/documents/storage/token";
 import { validateUpload } from "@/lib/documents/storage/validate";
@@ -11,6 +15,8 @@ import {
   InvalidTokenError,
   UnsupportedFileError,
 } from "@/lib/documents/storage/types";
+import { publishJob } from "@/lib/jobs/publish";
+import { QUEUES } from "@/lib/jobs/queues";
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,5 +63,25 @@ export async function POST(request: NextRequest) {
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, Buffer.from(body));
 
-  return NextResponse.json({ storageKey: payload.storageKey, sizeBytes: body.byteLength });
+  const checksum = createHash("sha256").update(Buffer.from(body)).digest("hex");
+
+  if (payload.documentId) {
+    const db = getDb();
+    await db
+      .update(courseDocuments)
+      .set({ checksum, processingStatus: "processing" })
+      .where(eq(courseDocuments.id, payload.documentId));
+
+    await publishJob(
+      QUEUES.documentProcessing,
+      { courseDocumentId: payload.documentId, checksum },
+      checksum,
+    );
+  }
+
+  return NextResponse.json({
+    storageKey: payload.storageKey,
+    sizeBytes: body.byteLength,
+    checksum,
+  });
 }

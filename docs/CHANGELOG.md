@@ -2,6 +2,15 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-16 — P-1 → M1.2 → T1.2.1: Document upload interface + real processing pipeline
+
+- `/documents` is now course-scoped and functional: drag-and-drop + file picker + batch upload, allowed-formats list, a mandatory "no identifiable student data" confirmation gating the whole dropzone, real per-file upload progress (`XMLHttpRequest`), and per-file retry.
+- Extended the T0.4.4 storage token to optionally carry a `documentId`, so `/api/storage/upload` can update the right `course_documents` row and enqueue a document-processing job on a successful upload — no separate "confirm upload" round trip needed.
+- Implemented real (not mocked) text extraction + fixed-size overlapping chunking for plain text/Markdown in `workers/document-processing`, replacing the log-only stub from T0.4.5. PDF/DOCX/PPTX correctly fail with an honest `processing_error_code` (no parser library added yet) instead of being silently marked processed.
+- Added a basic course-scoped document list (title/type/status/upload date).
+- Verified end-to-end in a real browser against the real running app: a `.txt` upload reached "Processed" and its exact extracted text was confirmed in `document_chunks` via a direct Postgres query; a `.pdf` upload correctly reached "Failed". (Browser file-picker automation was sandboxed in this environment, so the upload itself was driven via a real `DataTransfer`-constructed `File` dispatched to the actual file input — same code path a real user drag-and-drop or file-picker selection triggers, not a shortcut around the app.)
+- Found a real test-isolation bug while adding coverage: the new document-processing worker and an existing generic job test both registered on the same queue, and pg-boss round-robins jobs between every worker on a queue, causing flaky cross-test contamination. Fixed by moving the generic test to a queue with no other worker registered on it.
+
 ## 2026-07-15 — P-1 → M1.1 → T1.1.4: Course settings
 
 - `/settings` is now course-scoped (reads `?course=`): edit metadata, view data usage, export, and delete a course.

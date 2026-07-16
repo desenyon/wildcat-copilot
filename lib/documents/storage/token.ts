@@ -8,6 +8,9 @@ export interface TokenPayload {
   storageKey: string;
   action: "upload" | "download";
   mimeType?: string;
+  // When set, the upload route updates this course_documents row and
+  // enqueues document processing on a successful upload (T1.2.1/T1.2.4).
+  documentId?: string;
   expiresAt: number;
 }
 

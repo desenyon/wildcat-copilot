@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { eq } from "drizzle-orm";
 import type { Job } from "pg-boss";
 import { getJobClient } from "@/lib/jobs/client";
 import { QUEUES, ensureQueue } from "@/lib/jobs/queues";
@@ -5,12 +7,18 @@ import {
   documentProcessingPayloadSchema,
   type DocumentProcessingPayload,
 } from "@/lib/jobs/payloads";
+import { getDb } from "@/lib/db/client";
+import { courseDocuments, documentChunks } from "@/lib/db/schema";
+import { LocalStorageProvider } from "@/lib/documents/storage/local";
+import { chunkText, extractText, UnsupportedFormatForExtractionError } from "@/lib/documents/parse";
 
 /**
- * Parses/chunks/embeds an uploaded course document. The parse/chunk/embed
- * pipeline itself ships in T1.2.4; this registers the queue wiring so
- * T0.4.5's acceptance criteria (queue exists, retries, job status visible)
- * can be verified before that pipeline exists.
+ * Parses and chunks an uploaded course document (T1.2.4, partial). Real
+ * extraction only exists for plain text / Markdown today — no PDF/DOCX/PPTX
+ * parsing library is wired up yet, so those formats fail honestly with a
+ * `processing_error_code` rather than being silently marked processed.
+ * Embeddings (the rest of T1.2.4) aren't generated here yet either: that
+ * needs an LLM provider, which isn't chosen (see docs/DECISIONS.md).
  */
 export async function registerDocumentProcessingWorker(): Promise<void> {
   await ensureQueue(QUEUES.documentProcessing);
@@ -19,8 +27,54 @@ export async function registerDocumentProcessingWorker(): Promise<void> {
     QUEUES.documentProcessing,
     async ([job]: Job<DocumentProcessingPayload>[]) => {
       const payload = documentProcessingPayloadSchema.parse(job.data);
-      console.log(`[document-processing] processing course document ${payload.courseDocumentId}`);
-      // Parsing/chunking/embedding lands in T1.2.4.
+      const db = getDb();
+
+      const document = await db.query.courseDocuments.findFirst({
+        where: eq(courseDocuments.id, payload.courseDocumentId),
+      });
+      if (!document) {
+        console.warn(`[document-processing] document ${payload.courseDocumentId} no longer exists`);
+        return;
+      }
+
+      try {
+        const provider = new LocalStorageProvider();
+        const buffer = await readFile(provider.resolvePath(document.storageKey));
+        const text = extractText(document.mimeType, buffer);
+        const chunks = chunkText(text);
+
+        if (chunks.length > 0) {
+          await db.insert(documentChunks).values(
+            chunks.map((chunk) => ({
+              courseDocumentId: document.id,
+              courseId: document.courseId,
+              sequenceNumber: chunk.sequenceNumber,
+              text: chunk.text,
+            })),
+          );
+        }
+
+        await db
+          .update(courseDocuments)
+          .set({ processingStatus: "processed", processingErrorCode: null })
+          .where(eq(courseDocuments.id, document.id));
+
+        console.log(
+          `[document-processing] processed ${document.id} into ${chunks.length} chunk(s)`,
+        );
+      } catch (error) {
+        const errorCode =
+          error instanceof UnsupportedFormatForExtractionError
+            ? "unsupported_format_extraction_not_implemented"
+            : "extraction_failed";
+
+        await db
+          .update(courseDocuments)
+          .set({ processingStatus: "failed", processingErrorCode: errorCode })
+          .where(eq(courseDocuments.id, document.id));
+
+        console.warn(`[document-processing] failed ${document.id}: ${errorCode}`, error);
+      }
     },
   );
 }

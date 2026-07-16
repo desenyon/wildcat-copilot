@@ -33,11 +33,13 @@ export class LocalStorageProvider implements StorageProvider {
   async createUploadTicket(params: {
     storageKey: string;
     mimeType: string;
+    documentId?: string;
   }): Promise<UploadTicket> {
     const token = issueToken({
       storageKey: params.storageKey,
       action: "upload",
       mimeType: params.mimeType,
+      documentId: params.documentId,
     });
     return {
       storageKey: params.storageKey,

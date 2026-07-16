@@ -33,7 +33,11 @@ export class InvalidTokenError extends Error {}
  * touching call sites.
  */
 export interface StorageProvider {
-  createUploadTicket(params: { storageKey: string; mimeType: string }): Promise<UploadTicket>;
+  createUploadTicket(params: {
+    storageKey: string;
+    mimeType: string;
+    documentId?: string;
+  }): Promise<UploadTicket>;
   createDownloadTicket(storageKey: string): Promise<DownloadTicket>;
   deleteObject(storageKey: string): Promise<void>;
 }
