@@ -14,6 +14,8 @@ export default async function WorkspaceLayout({ children }: { children: ReactNod
     throw error;
   }
 
+  if (!actor.onboardedAt) redirect("/welcome");
+
   const courses = await listCoursesForActor(actor);
 
   return (

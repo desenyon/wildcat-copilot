@@ -2,6 +2,13 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-15 — P-1 → M1.1 → T1.1.1: Pilot welcome flow
+
+- `/welcome`: one-screen intro (product explanation, teacher-control notice, no-student-data notice, "outputs require review" warning) with an opt-in pilot analytics consent checkbox and a direct "Get started" CTA.
+- Added `users.onboardedAt` / `users.pilot_analytics_consent` (migration `0003`). The `(workspace)` layout now redirects any signed-in teacher who hasn't completed onboarding to `/welcome` before they can reach any workspace page.
+- `completeOnboardingAction` records the consent choice, marks onboarding complete, then routes to `/courses/new` or `/home` depending on whether the teacher already has courses.
+- Verified end-to-end in a real browser: redirect-to-welcome for an unonboarded teacher, and correct consent persistence (`false`) after submitting without checking the box.
+
 ## 2026-07-15 — P-1 → M1.1 → T1.1.2: Course creation
 
 - Real course creation: `/courses/new` form (Zod-validated server action) inserts an actual `courses` row owned by the signed-in teacher and redirects to `/home?course=<id>`.

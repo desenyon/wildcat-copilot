@@ -49,7 +49,12 @@ export async function requireActor(): Promise<AuthenticatedActor> {
     [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ") || email;
   const dbUser = await upsertUserOnSignIn({ clerkUserId, email, displayName });
 
-  return { userId: dbUser.id, organizationId: dbUser.organizationId, role: dbUser.role };
+  return {
+    userId: dbUser.id,
+    organizationId: dbUser.organizationId,
+    role: dbUser.role,
+    onboardedAt: dbUser.onboardedAt,
+  };
 }
 
 /** Fetches the course and applies {@link checkCourseAccess}, or throws. */

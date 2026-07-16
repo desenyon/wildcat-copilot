@@ -8,6 +8,7 @@ export interface AuthenticatedActor {
   userId: string;
   organizationId: string;
   role: string;
+  onboardedAt: Date | null;
 }
 
 interface CourseOwnership {

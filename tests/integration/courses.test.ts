@@ -82,6 +82,7 @@ describe("listCoursesForActor", () => {
         userId: teacherA.id,
         organizationId: orgA.id,
         role: "teacher",
+        onboardedAt: null,
       });
 
       expect(result).toHaveLength(1);

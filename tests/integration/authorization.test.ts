@@ -66,6 +66,7 @@ describe("course authorization", () => {
           userId: teacherA.id,
           organizationId: orgA.id,
           role: "teacher",
+          onboardedAt: null,
         }),
       ).toBe(true);
 
@@ -74,6 +75,7 @@ describe("course authorization", () => {
           userId: teacherB.id,
           organizationId: orgB.id,
           role: "teacher",
+          onboardedAt: null,
         }),
       ).toThrow(ForbiddenError);
 
@@ -82,13 +84,14 @@ describe("course authorization", () => {
           userId: teacherA2.id,
           organizationId: orgA.id,
           role: "teacher",
+          onboardedAt: null,
         }),
       ).toThrow(ForbiddenError);
 
       expect(
         checkCourseAccess(
           course,
-          { userId: teacherA2.id, organizationId: orgA.id, role: "teacher" },
+          { userId: teacherA2.id, organizationId: orgA.id, role: "teacher", onboardedAt: null },
           { anyOwnerInOrg: true },
         ),
       ).toBe(true);

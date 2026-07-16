@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { organizations } from "./organizations";
 
 export const userRoleEnum = pgEnum("user_role", [
@@ -21,6 +21,10 @@ export const users = pgTable("users", {
   displayName: text("display_name").notNull(),
   role: userRoleEnum("role").notNull().default("teacher"),
   authProvider: text("auth_provider").notNull().default("clerk"),
+  // T1.1.1 pilot welcome flow: set once the teacher completes the one-screen
+  // intro (product explanation, privacy boundaries, review requirement).
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+  pilotAnalyticsConsent: boolean("pilot_analytics_consent").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
 });
