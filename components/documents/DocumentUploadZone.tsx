@@ -1,15 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button, Notice, Select } from "@/components/design-system";
+import { Button, Notice } from "@/components/design-system";
 import { requestDocumentUpload, markDocumentUploadFailed } from "@/lib/documents/actions";
+import { suggestDocumentType, type DocumentType } from "@/lib/documents/classify";
 import { MAX_UPLOAD_BYTES } from "@/lib/documents/storage/types";
-
-type RequestUploadInputType = Parameters<typeof requestDocumentUpload>[0]["documentType"];
 
 const ACCEPT = ".pdf,.docx,.pptx,.txt,.md";
 
-const DOCUMENT_TYPE_OPTIONS = [
+const DOCUMENT_TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
   { value: "syllabus", label: "Syllabus" },
   { value: "assignment", label: "Assignment" },
   { value: "rubric", label: "Rubric" },
@@ -24,6 +23,7 @@ const DOCUMENT_TYPE_OPTIONS = [
 interface UploadItem {
   id: string;
   file: File;
+  documentType: DocumentType;
   status: "queued" | "uploading" | "done" | "error";
   progress: number;
   documentId?: string;
@@ -49,7 +49,6 @@ function uploadWithProgress(url: string, file: File, onProgress: (pct: number) =
 
 export function DocumentUploadZone({ courseId }: { courseId: string }) {
   const [confirmed, setConfirmed] = useState(false);
-  const [documentType, setDocumentType] = useState("other");
   const [items, setItems] = useState<UploadItem[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,7 +72,7 @@ export function DocumentUploadZone({ courseId }: { courseId: string }) {
           // File.type is an untyped string in the DOM lib.
           mimeType: item.file.type as Parameters<typeof requestDocumentUpload>[0]["mimeType"],
           sizeBytes: item.file.size,
-          documentType: documentType as RequestUploadInputType,
+          documentType: item.documentType,
           confirmedNoStudentData: true,
         });
         documentId = ticket.documentId;
@@ -111,6 +110,7 @@ export function DocumentUploadZone({ courseId }: { courseId: string }) {
     const newItems: UploadItem[] = Array.from(fileList).map((file) => ({
       id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
       file,
+      documentType: suggestDocumentType(file.name).documentType,
       status: "queued",
       progress: 0,
     }));
@@ -135,15 +135,6 @@ export function DocumentUploadZone({ courseId }: { courseId: string }) {
         />
         <span>I confirm these files do not contain identifiable student data.</span>
       </label>
-
-      <div className="max-w-xs">
-        <Select
-          label="Document type for this batch"
-          value={documentType}
-          onChange={(e) => setDocumentType(e.target.value)}
-          options={DOCUMENT_TYPE_OPTIONS}
-        />
-      </div>
 
       <div
         className={`flex flex-col items-center justify-center gap-2 rounded-sm border-2 border-dashed px-6 py-10 text-center transition-colors ${
@@ -182,7 +173,7 @@ export function DocumentUploadZone({ courseId }: { courseId: string }) {
         <p className="text-muted mt-2 text-xs">
           Allowed: PDF, DOCX, PPTX, plain text, Markdown. Up to{" "}
           {Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)}
-          MB per file.
+          MB per file. We&apos;ll suggest a document type per file — change it if we guessed wrong.
         </p>
       </div>
 
@@ -207,6 +198,28 @@ export function DocumentUploadZone({ courseId }: { courseId: string }) {
                   <p className="text-danger mt-1 text-xs">{item.error}</p>
                 )}
               </div>
+              {item.status === "queued" || item.status === "uploading" ? (
+                <select
+                  value={item.documentType}
+                  disabled={item.status === "uploading"}
+                  onChange={(e) =>
+                    setItems((prev) =>
+                      prev.map((i) =>
+                        i.id === item.id
+                          ? { ...i, documentType: e.target.value as DocumentType }
+                          : i,
+                      ),
+                    )
+                  }
+                  className="border-rule bg-canvas text-ink h-8 shrink-0 rounded-sm border px-2 text-xs"
+                >
+                  {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
               {item.status === "done" && (
                 <span className="text-success shrink-0 text-xs">Uploaded</span>
               )}

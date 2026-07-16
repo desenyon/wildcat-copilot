@@ -1,0 +1,1 @@
+ALTER TABLE "course_documents" ADD COLUMN "document_type_confidence" real;

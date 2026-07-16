@@ -5,6 +5,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
   uuid,
@@ -48,6 +49,9 @@ export const courseDocuments = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     documentType: documentTypeEnum("document_type").notNull().default("other"),
+    // Confidence in `documentType`: null = not yet classified, <1 = system
+    // suggestion (T1.2.3), 1.0 = explicit teacher choice/override.
+    documentTypeConfidence: real("document_type_confidence"),
     mimeType: text("mime_type").notNull(),
     storageKey: text("storage_key").notNull(),
     checksum: text("checksum").notNull(),

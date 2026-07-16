@@ -2,6 +2,13 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-16 — P-1 → M1.2 → T1.2.3/T1.2.5: Document classification suggestions + interactive document library
+
+- T1.2.3: added a filename-based keyword classifier (`lib/documents/classify.ts`) that suggests a document type per file at upload time. `DocumentUploadZone` no longer has one batch-level type selector — each queued file shows its own suggested type in an editable per-row `<select>`. Added `course_documents.document_type_confidence` (migration `0004`): `null` until classified, the suggestion's own confidence when accepted, `1.0` when the teacher explicitly picks or changes the type — mirroring how the rest of the product treats explicit teacher corrections vs. inferred values.
+- T1.2.5: rebuilt `DocumentList` as an interactive client component, completing the AGENTS.md acceptance criteria beyond the original read-only table: client-side search by title, per-row document-type change, rename via dialog, reprocess (clears old chunks and re-enqueues a real pg-boss job) for processed/failed documents, remove gated by a destructive `ConfirmDialog`, and a preview dialog that fetches up to 1000 characters of real extracted text on open.
+- Verified end-to-end against the real running app and real Postgres/pg-boss, not mocked: previewed real extracted PDF text in the dialog; renamed a document and watched the row update immediately; changed a document's type and confirmed via a direct Postgres query that `document_type_confidence` was set to exactly `1`; removed a document via the confirm dialog and confirmed the row was actually gone from Postgres; reprocessed a document and confirmed via the worker's own logs and a DB query that a real job ran and repopulated `document_chunks`.
+- `npm run typecheck`, `npm run lint`, `npm test` (29/29 passing), and `npm run build` all clean before shipping.
+
 ## 2026-07-16 — P-1 → M1.2 → T1.2.2/T1.2.4: Real PDF/DOCX/PPTX extraction
 
 - Added real (not mocked) text extraction for PDF, DOCX, and PPTX via `officeparser`, completing T1.2.2 (all 5 required formats now both accepted and extractable) and extending T1.2.4's extraction/chunking coverage from text/Markdown-only to all 5 formats.
