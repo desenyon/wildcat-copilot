@@ -1,21 +1,40 @@
+import { parseOffice, type SupportedFileType } from "officeparser";
+
 export class UnsupportedFormatForExtractionError extends Error {}
 
 const TEXT_MIME_TYPES = new Set(["text/plain", "text/markdown"]);
 
+const OFFICE_FILE_TYPE_BY_MIME: Record<string, SupportedFileType> = {
+  "application/pdf": "pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+};
+
 /**
- * Real (not mocked) text extraction — but only for formats that don't need
- * a parsing library we haven't added yet. PDF/DOCX/PPTX extraction is
- * genuinely unimplemented; callers must surface that honestly (a `failed`
- * processing status with a clear error code) rather than pretending it
- * succeeded. Revisit when pdf-parse/mammoth/similar are added.
+ * Real (not mocked) text extraction for every format T1.2.2 requires.
+ * Plain text/Markdown are decoded directly; PDF/DOCX/PPTX go through
+ * `officeparser` (pure-JS zip/PDF parsing, no native deps, OCR disabled —
+ * image-only pages/slides yield no text rather than silently hanging on
+ * Tesseract). The `fileType` hint is passed explicitly from our already-known
+ * mime type rather than relying on officeparser's magic-byte auto-detection,
+ * which turned out to be environment-sensitive (worked in a plain Node
+ * script, failed under Vitest's test environment). Anything else throws so
+ * callers can surface it honestly rather than pretending extraction succeeded.
  */
-export function extractText(mimeType: string, buffer: Buffer): string {
-  if (!TEXT_MIME_TYPES.has(mimeType)) {
-    throw new UnsupportedFormatForExtractionError(
-      `Text extraction for "${mimeType}" is not implemented yet`,
-    );
+export async function extractText(mimeType: string, buffer: Buffer): Promise<string> {
+  if (TEXT_MIME_TYPES.has(mimeType)) {
+    return buffer.toString("utf-8");
   }
-  return buffer.toString("utf-8");
+
+  const fileType = OFFICE_FILE_TYPE_BY_MIME[mimeType];
+  if (fileType) {
+    const ast = await parseOffice(buffer, { fileType, ocr: false, includeRawContent: false });
+    return ast.toText();
+  }
+
+  throw new UnsupportedFormatForExtractionError(
+    `Text extraction for "${mimeType}" is not implemented yet`,
+  );
 }
 
 export interface TextChunk {

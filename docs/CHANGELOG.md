@@ -2,6 +2,13 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-16 — P-1 → M1.2 → T1.2.2/T1.2.4: Real PDF/DOCX/PPTX extraction
+
+- Added real (not mocked) text extraction for PDF, DOCX, and PPTX via `officeparser`, completing T1.2.2 (all 5 required formats now both accepted and extractable) and extending T1.2.4's extraction/chunking coverage from text/Markdown-only to all 5 formats.
+- Verified with real files at every layer before wiring into the app: a standalone Node smoke test against hand-built real PDF/DOCX/PPTX buffers, then unit tests using the same fixtures, then a real end-to-end integration test (real file on disk → real worker → real chunk in Postgres), then a real upload through the actual running app in a browser — confirmed the exact extracted text in `document_chunks` via a direct Postgres query.
+- Found and fixed two real bugs while building this out, neither of which were application bugs: (1) `officeparser`'s buffer auto-detection silently failed under Vitest's jsdom environment (fixed by passing an explicit `fileType` hint, which is more robust anyway); (2) a hand-built PDF test fixture used a page (`MediaBox`) too narrow for its text, causing `pdfjs-dist` to legitimately clip the extracted text at the page boundary — traced by testing with a plain Node script before assuming it was a code bug, then fixed the fixture.
+- Embedding generation remains not implemented — needs a real LLM/embedding provider API key that hasn't been chosen or supplied yet (see `docs/DECISIONS.md`).
+
 ## 2026-07-16 — P-1 → M1.2 → T1.2.1: Document upload interface + real processing pipeline
 
 - `/documents` is now course-scoped and functional: drag-and-drop + file picker + batch upload, allowed-formats list, a mandatory "no identifiable student data" confirmation gating the whole dropzone, real per-file upload progress (`XMLHttpRequest`), and per-file retry.

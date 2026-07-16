@@ -87,3 +87,20 @@ Record format: date, decision, context, alternatives considered, consequences. A
 - `AUTH_SECRET` was renamed to `APP_SECRET` — it's now a general-purpose HMAC secret (used for storage tokens) with no connection to any auth provider's session signing.
 - **This specific Clerk instance is configured OAuth-only** (Google/GitHub/LinkedIn) with no email/password/username identification enabled. Fine for real sign-in, but it means `@clerk/testing`'s headless Playwright sign-in helper (which needs an email-based identity to mint a test session) can't be used as-is. e2e tests requiring an authenticated session are `test.skip()`-ed for now (`tests/e2e/workspace-shell.spec.ts`, `tests/e2e/storage.spec.ts`) — re-enable once an email-based identification strategy is added in the Clerk dashboard for test purposes, and restore the `signInAsTestTeacher` implementation in `tests/e2e/helpers/auth.ts` (previous working version used `clerk.signIn({ page, emailAddress })` after provisioning a test user via the Backend API in `tests/e2e/global-setup.ts`).
 - `CLERK_SECRET_KEY` is read from a GitHub Actions encrypted secret (`${{ secrets.CLERK_SECRET_KEY }}`) in `.github/workflows/ci.yml`, not hardcoded — a first pass at this hardcoded the test-mode secret key directly in the workflow file, which the harness's auto-mode classifier correctly flagged before it reached git history. The publishable key (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`) is safe to keep literal in the workflow — it's meant to be public and ships in the client bundle regardless. **Action required:** add `CLERK_SECRET_KEY` as a repository secret (Settings → Secrets and variables → Actions → New repository secret) before CI will pass.
+
+---
+
+## 2026-07-16 — PDF/DOCX/PPTX text extraction: `officeparser`
+
+**Decision:** Use `officeparser` (pure-JS, no native deps) for T1.2.4 PDF/DOCX/PPTX text extraction, with OCR explicitly disabled.
+
+**Context:** T1.2.2/T1.2.4 require extracting text from all 5 upload formats, but only plain text/Markdown had real extraction (direct decode). `officeparser` covers PDF (via `pdfjs-dist`), DOCX, and PPTX (both OOXML zip parsing) in one dependency, and also ships RAG-oriented chunking helpers we may reuse later instead of our own `chunkText`.
+
+**Alternatives considered:** Separate single-purpose libraries (`pdf-parse` + `mammoth` + a PPTX-specific parser) — more, smaller dependencies vs. one larger one (12MB unpacked, pulls in `tesseract.js` for optional OCR). Went with `officeparser` for fewer moving parts; OCR is disabled (`ocr: false`) so `tesseract.js` is never actually invoked at runtime.
+
+**Consequences:**
+
+- Must pass an explicit `fileType` hint (`lib/documents/parse.ts` maps our known mime type to it) rather than relying on `officeparser`'s buffer auto-detection — auto-detection worked in a plain Node script but failed under Vitest's test environment (jsdom), and passing the hint is more robust regardless since we already know the mime type from the upload.
+- `pdfjs-dist`'s PDF path needs Node's build; under jsdom it wrongly auto-selects the browser build and fails on a missing `DOMMatrix`. Tests exercising PDF extraction (`tests/unit/document-parse.test.ts`, `tests/integration/document-processing.test.ts`) use `// @vitest-environment node` to override per-file. Not a production concern — Next.js server code and the worker process always run in real Node, never jsdom.
+- `officeparser`/`pdfjs-dist`/`tesseract.js` are only imported by `workers/document-processing/index.ts`, which is only entry-pointed by `workers/run.ts` (a separate `tsx` process). The Next.js app itself never imports the worker module directly (routes only enqueue jobs), so none of this affects the app's build or bundle.
+- Embedding generation (the other half of T1.2.4) is still not implemented — that needs a real embeddings API key from an LLM/embedding provider, which hasn't been chosen or supplied yet.

@@ -13,12 +13,10 @@ import { LocalStorageProvider } from "@/lib/documents/storage/local";
 import { chunkText, extractText, UnsupportedFormatForExtractionError } from "@/lib/documents/parse";
 
 /**
- * Parses and chunks an uploaded course document (T1.2.4, partial). Real
- * extraction only exists for plain text / Markdown today — no PDF/DOCX/PPTX
- * parsing library is wired up yet, so those formats fail honestly with a
- * `processing_error_code` rather than being silently marked processed.
- * Embeddings (the rest of T1.2.4) aren't generated here yet either: that
- * needs an LLM provider, which isn't chosen (see docs/DECISIONS.md).
+ * Parses and chunks an uploaded course document (T1.2.4). Real extraction
+ * covers plain text/Markdown (direct decode) and PDF/DOCX/PPTX (via
+ * `officeparser`). Embeddings aren't generated here yet: that needs an LLM
+ * provider, which isn't chosen (see docs/DECISIONS.md).
  */
 export async function registerDocumentProcessingWorker(): Promise<void> {
   await ensureQueue(QUEUES.documentProcessing);
@@ -40,7 +38,7 @@ export async function registerDocumentProcessingWorker(): Promise<void> {
       try {
         const provider = new LocalStorageProvider();
         const buffer = await readFile(provider.resolvePath(document.storageKey));
-        const text = extractText(document.mimeType, buffer);
+        const text = await extractText(document.mimeType, buffer);
         const chunks = chunkText(text);
 
         if (chunks.length > 0) {
