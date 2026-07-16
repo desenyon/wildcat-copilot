@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { organizations, users, courses } from "@/lib/db/schema";
-import { listCoursesForActor } from "@/lib/courses/queries";
+import { organizations, users, courses, courseDocuments, artifacts } from "@/lib/db/schema";
+import { getCourseDataUsage, listCoursesForActor } from "@/lib/courses/queries";
 
 // listCoursesForActor reads through the shared db client (lib/db/client.ts),
 // not a rolled-back transaction (see tests/integration/db-helpers.ts's note
@@ -90,6 +90,83 @@ describe("listCoursesForActor", () => {
     } finally {
       await db.delete(organizations).where(eq(organizations.id, orgA.id));
       await db.delete(organizations).where(eq(organizations.id, orgB.id));
+    }
+  });
+});
+
+describe("getCourseDataUsage", () => {
+  it("counts only documents/artifacts belonging to the given course", async () => {
+    const db = getDb();
+    const suffix = Date.now();
+
+    const [org] = await db
+      .insert(organizations)
+      .values({ name: "LGHS", slug: `lghs-usage-${suffix}` })
+      .returning();
+
+    try {
+      const [teacher] = await db
+        .insert(users)
+        .values({
+          organizationId: org.id,
+          clerkUserId: `user_test_usage_${suffix}`,
+          email: `teacher-usage-${suffix}@example.com`,
+          displayName: "Teacher",
+        })
+        .returning();
+
+      const [courseA, courseB] = await db
+        .insert(courses)
+        .values([
+          {
+            organizationId: org.id,
+            ownerUserId: teacher.id,
+            name: "Course A",
+            subject: "Science",
+            gradeBand: "9-10",
+            academicTerm: "Fall 2026",
+          },
+          {
+            organizationId: org.id,
+            ownerUserId: teacher.id,
+            name: "Course B",
+            subject: "Math",
+            gradeBand: "9-10",
+            academicTerm: "Fall 2026",
+          },
+        ])
+        .returning();
+
+      await db.insert(courseDocuments).values([
+        {
+          courseId: courseA.id,
+          uploadedByUserId: teacher.id,
+          title: "Syllabus",
+          mimeType: "application/pdf",
+          storageKey: `test/${suffix}/a.pdf`,
+          checksum: "abc",
+        },
+        {
+          courseId: courseB.id,
+          uploadedByUserId: teacher.id,
+          title: "Other course doc",
+          mimeType: "application/pdf",
+          storageKey: `test/${suffix}/b.pdf`,
+          checksum: "def",
+        },
+      ]);
+      await db.insert(artifacts).values({
+        courseId: courseA.id,
+        artifactType: "assignment",
+        title: "Lab report",
+        contentJson: {},
+        contentText: "",
+      });
+
+      const usage = await getCourseDataUsage(courseA.id);
+      expect(usage).toEqual({ documentCount: 1, artifactCount: 1 });
+    } finally {
+      await db.delete(organizations).where(eq(organizations.id, org.id));
     }
   });
 });

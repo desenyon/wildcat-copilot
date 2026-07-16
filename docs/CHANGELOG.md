@@ -2,6 +2,15 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-15 — P-1 → M1.1 → T1.1.4: Course settings
+
+- `/settings` is now course-scoped (reads `?course=`): edit metadata, view data usage, export, and delete a course.
+- `updateCourseAction` + `EditCourseForm`: prefilled, Zod-validated, `revalidatePath`s so the course switcher reflects a rename immediately.
+- `getCourseDataUsage`: real per-course document/artifact counts (0/0 today, will be accurate as M1.2/M1.4 land).
+- `GET /api/courses/[courseId]/export`: downloads the course's own metadata as JSON.
+- `deleteCourseAction` + `DeleteCourseSection`: hard delete gated by `ConfirmDialog`, enforced through `requireCourseAccess` so a teacher can only delete their own course.
+- Verified end-to-end in a real browser: renamed a course and watched the switcher update live, downloaded a real export, and created + deleted a disposable course — confirmed via a direct Postgres query that exactly that row was removed and nothing else.
+
 ## 2026-07-15 — P-1 → M1.1 → T1.1.1: Pilot welcome flow
 
 - `/welcome`: one-screen intro (product explanation, teacher-control notice, no-student-data notice, "outputs require review" warning) with an opt-in pilot analytics consent checkbox and a direct "Get started" CTA.
