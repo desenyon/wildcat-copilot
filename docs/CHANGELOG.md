@@ -2,6 +2,13 @@
 
 Format: date, phase/milestone/task reference, summary. Newest first.
 
+## 2026-07-17 — P-1 → M1.7 → T1.7.1: Real teacher home dashboard
+
+- Replaced the `/home` placeholder with a real dashboard driven by `lib/dashboard/queries.ts` (`getHomeDashboardData`): time-saved metric (real sum over `teacher_feedback.estimated_minutes_saved`), recent exports (real `export_records` joined to `artifacts`), course cards with real per-course document/artifact counts, "continue recent work" (real recent documents), documents needing attention (real failed-processing rows), artifacts needing review (real `artifacts.status = 'needs_review'`), and a "Create weekly course pack" primary CTA placed so it's visible without scrolling on desktop, per the AGENTS.md acceptance criterion.
+- Every section queries real tables scoped to the actor's own courses — no mocked or seeded data. The artifact/export/feedback tables are legitimately empty until M1.3's generation pipeline ships, so those sections render genuine empty states with a next-action link rather than fake placeholder rows.
+- Verified in a real browser against real Postgres: two real courses render with accurate counts (2 documents / 0 artifacts and 0 / 0), recent documents list real uploaded titles, and empty-state sections correctly point toward `/documents` and `/packs`.
+- `npm run typecheck`, `npm run lint`, and `npm run build` all clean before shipping.
+
 ## 2026-07-17 — P-1 → M1.2 → T1.2.6: Course profile synthesis (rule-based)
 
 - Completes M1.2. New `lib/course-profile/synthesize.ts`: seven pure, unit-tested extractors (learning objectives, instruction style/vocabulary, assignment patterns, rubric patterns, communication tone, difficulty profile via Flesch reading ease, format preferences) that run over a course's already-extracted `document_chunks` text using keyword/regex/statistical heuristics — no LLM call, since no provider was chosen yet at the time (see docs/DECISIONS.md). Each field returns a confidence score and the real source document ids it was derived from.
