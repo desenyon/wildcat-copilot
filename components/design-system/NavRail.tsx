@@ -13,6 +13,7 @@ export interface NavItem {
 const items: NavItem[] = [
   { href: "/home", label: "Home" },
   { href: "/documents", label: "Documents" },
+  { href: "/course-profile", label: "Course profile" },
   { href: "/packs", label: "Course packs" },
   { href: "/artifacts", label: "Artifacts" },
   { href: "/settings", label: "Settings" },
